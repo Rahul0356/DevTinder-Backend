@@ -1,23 +1,23 @@
 const express = require("express")
-
+const connectDB = require("./config/database.js")
 const app = express();
+const User = require("../models/user.js")
+const {} = require("../utils/validation.js")
+const cookieParser = require("cookie-parser");
+const jwt = require (j)
 
 const { adminAuth }= require("./middlewares/auth.js")
 
 app.use ("/admin",adminAuth)
 
-app.get("/user",(req,res)=>{
-    res.send("User Data Sent")
-})
 
-app.get("/admin/getAllData",(req,res)=>{
-    res.send("All Data sent");
-});
-
-app.get("/admin/deleteUser",(req,res)=>{
-    res.send("Deteled a user")
-})
-app.listen(7777,()=>{
-    console.log("Server is successfully listening on port 7777....");
-})
-
+connectDB()
+  .then(() => {
+    console.log("Database connection established...");
+    server.listen(process.env.PORT, () => {
+      console.log("Server is successfully listening on port 7777...");
+    });
+  })
+  .catch((err) => {
+    console.error("Database cannot be connected!!");
+  });
