@@ -4,10 +4,15 @@ const app = express();
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const http = require("http");
+const morgan = require("morgan");
 
 require("dotenv").config();
 
-
+// Morgan logging - should be one of the first middlewares
+// Using 'dev' format: :method :url :status :response-time ms - :res[content-length]
+app.use(morgan("dev", {
+  stream: process.stdout // Explicitly write to stdout
+}));
 
 app.use(
   cors({

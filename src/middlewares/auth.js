@@ -1,26 +1,35 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const userAuth = async (req, res, next) => {
+const userAuth = (req, res, next) => {
   try {
     const { token } = req.cookies;
     if (!token) {
       return res.status(401).send("Please Login!");
     }
 
-    const decodedObj = await jwt.verify(token, process.env.JWT_SECRET);
+    // Use callback-based jwt.verify for better middleware compatibility
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decodedObj) => {
+      if (err) {
+        return res.status(401).send("Invalid or expired token");
+      }
 
-    const { _id } = decodedObj;
+      try {
+        const { _id } = decodedObj;
+        const user = await User.findById(_id);
 
-    const user = await User.findById(_id);
-    if (!user) {
-      throw new Error("User not found");
-    }
+        if (!user) {
+          return res.status(401).send("User not found");
+        }
 
-    req.user = user;
-    next();
+        req.user = user;
+        return next();
+      } catch (error) {
+        return res.status(400).send("ERROR: " + error.message);
+      }
+    });
   } catch (err) {
-    res.status(400).send("ERROR: " + err.message);
+    return res.status(400).send("ERROR: " + err.message);
   }
 };
 
