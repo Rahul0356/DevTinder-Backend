@@ -6,10 +6,10 @@ const cors = require("cors");
 const http = require("http");
 const morgan = require("morgan");
 
+
 require("dotenv").config();
 
-// Morgan logging - should be one of the first middlewares
-// Using 'dev' format: :method :url :status :response-time ms - :res[content-length]
+
 app.use(morgan("dev", {
   stream: process.stdout // Explicitly write to stdout
 }));
@@ -27,6 +27,7 @@ const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
 const requestRouter = require("./routes/request");
 const userRouter = require("./routes/user");
+const initializeSocket = require("./utils/socket");
 
 
 
@@ -37,7 +38,7 @@ app.use("/", userRouter);
 
 const server = http.createServer(app);
 
-
+initializeSocket(server);
 connectDB()
   .then(() => {
     console.log("Database connection established...");
