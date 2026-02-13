@@ -1,35 +1,25 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-const userAuth = (req, res, next) => {
+const userAuth = async (req, res, next) => {
   try {
     const { token } = req.cookies;
     if (!token) {
       return res.status(401).send("Please Login!");
     }
 
-    // Use callback-based jwt.verify for better middleware compatibility
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decodedObj) => {
-      if (err) {
-        return res.status(401).send("Invalid or expired token");
-      }
+    const decodedObj = jwt.verify(token, process.env.JWT_SECRET);
+    const { _id } = decodedObj;
 
-      try {
-        const { _id } = decodedObj;
-        const user = await User.findById(_id);
+    const user = await User.findById(_id);
+    if (!user) {
+      return res.status(401).send("User not found");
+    }
 
-        if (!user) {
-          return res.status(401).send("User not found");
-        }
-
-        req.user = user;
-        return next();
-      } catch (error) {
-        return res.status(400).send("ERROR: " + error.message);
-      }
-    });
+    req.user = user;
+    next();
   } catch (err) {
-    return res.status(400).send("ERROR: " + err.message);
+    res.status(401).send("ERROR: " + err.message);
   }
 };
 
