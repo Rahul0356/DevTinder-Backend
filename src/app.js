@@ -6,22 +6,35 @@ const cors = require("cors");
 const http = require("http");
 const morgan = require("morgan");
 
-
 require("dotenv").config();
 
-
 app.use(morgan("dev", {
-  stream: process.stdout // Explicitly write to stdout
+  stream: process.stdout
 }));
 
+// FIXED: Dynamic CORS based on environment
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL || "http://localhost:5173",
     credentials: true,
   })
 );
+
 app.use(express.json());
 app.use(cookieParser());
+
+// ADD: Health check route
+app.get("/", (req, res) => {
+  res.json({ 
+    message: "DevTinder Backend API",
+    status: "running",
+    version: "1.0.0"
+  });
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "OK" });
+});
 
 const authRouter = require("./routes/auth");
 const profileRouter = require("./routes/profile");
@@ -30,13 +43,28 @@ const userRouter = require("./routes/user");
 const initializeSocket = require("./utils/socket");
 const chatRouter = require("./routes/chat");
 
-
-
 app.use("/", authRouter);
 app.use("/", profileRouter);
 app.use("/", requestRouter);
 app.use("/", userRouter);
 app.use("/", chatRouter);
+
+// ADD: 404 handler
+app.use((req, res) => {
+  res.status(404).json({ 
+    error: "Route not found",
+    path: req.path 
+  });
+});
+
+// ADD: Error handler
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ 
+    error: "Something went wrong!",
+    message: process.env.NODE_ENV === "development" ? err.message : undefined
+  });
+});
 
 const server = http.createServer(app);
 
@@ -44,10 +72,10 @@ initializeSocket(server);
 connectDB()
   .then(() => {
     console.log("Database connection established...");
-    server.listen(process.env.PORT, () => {
-      console.log("Server is successfully listening on port 8888...");
+    server.listen(process.env.PORT || 8888, () => {
+      console.log(`Server is successfully listening on port ${process.env.PORT || 8888}...`);
     });
   })
   .catch((err) => {
-    console.error("Database cannot be connected!!");
+    console.error("Database cannot be connected!!", err);
   });
