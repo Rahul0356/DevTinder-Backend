@@ -12,10 +12,13 @@ app.use(morgan("dev", {
   stream: process.stdout
 }));
 
-// FIXED: Dynamic CORS based on environment
+// Dynamic CORS based on environment
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
+    origin: [
+      "http://localhost:5173",
+      "https://devtinder-frontend-4djh.onrender.com"
+    ],
     credentials: true,
   })
 );
